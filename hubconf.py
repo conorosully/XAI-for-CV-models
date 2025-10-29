@@ -11,10 +11,12 @@ def get_model(model_name):
     if model_name not in available_models:
         raise ValueError(f"Model '{model_name}' not found. Available models: {available_models}")
     
-    model_path = "models/{}/model.pth".format(model_name)
-    config_path = "models/{}/config.json".format(model_name)
+    model_path = os.path.join(os.path.dirname(__file__), f"models/{model_name}/model.pth")
+    config_path = os.path.join(os.path.dirname(__file__), f"models/{model_name}/config.json")
 
-    config = json.load(open(os.path.join(os.path.dirname(__file__), config_path)))
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+
     num_classes = config['classes']
     input_dim = config['input_dim']
 
@@ -23,10 +25,15 @@ def get_model(model_name):
     else:
         model = network.CNN(num_classes=num_classes, input_dim=input_dim)
 
-    state_dict_loaded = torch.load(os.path.join(os.path.dirname(__file__), model_path), map_location='cpu')
+    try:
+        # Try the new default (safe) way
+        state_dict_loaded = torch.load(model_path, map_location='cpu')
+    except Exception as e:
+        print(f"Warning: Failed to load with weights_only=True ({e}). Retrying with weights_only=False...")
+        # Fallback to legacy behavior if safe to do so
+        state_dict_loaded = torch.load(model_path, map_location='cpu', weights_only=False)
+
     model.load_state_dict(state_dict_loaded)
     model.eval()
-
-
 
     return model
