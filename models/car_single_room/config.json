@@ -1,1 +1,0 @@
-{"batch_size": 32, "epochs": 20, "lr": 0.001, "classes": 1, "input_dim": 224, "network": "cnn"}
